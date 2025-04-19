@@ -8,16 +8,12 @@ app = FastAPI()
 
 # Root route to avoid 404 error
 
-
 @app.get("/", response_class=HTMLResponse)
 def root():
     return """
     <h2> FastAPI Delivery Cost Estimator is Running </h2>
     <p>Use <code>POST /calculate-cost</code> with product quantities in the request body to calculate delivery cost.</p>
     """
-
-# Request schema
-
 
 class Order(BaseModel):
     A: int = 0
@@ -98,48 +94,35 @@ class DeliveryPlanner:
         trip_plan = self.network.build_trip_plan(order)
         starting_centers = [center for center, _ in trip_plan]
         min_cost = float("inf")
-
         for start in starting_centers:
             cost = self.simulate_delivery(start, trip_plan)
             min_cost = min(min_cost, cost)
-
         return round(min_cost, 2)
 
     def simulate_delivery(self, start: str, trip_plan: List[Tuple[str, List[str]]]) -> float:
         current_location = start
         visited = set()
         total_cost = 0
-
         trip_sequence = trip_plan.copy()
-
         while trip_sequence:
             for idx, (center, products) in enumerate(trip_sequence):
                 if center in visited:
                     continue
-
-                # Go to pickup center if not at current location
                 if current_location != center:
                     dist = self.network.get_distance(current_location, center)
                     total_cost += dist * self.network.delivery_cost_per_km(0)
                     current_location = center
-
-                # Pickup and deliver
                 weight = sum(
                     self.network.product_weight[product] for product in products)
                 to_l1_dist = self.network.get_distance(current_location, "L1")
                 rate = self.network.delivery_cost_per_km(weight)
                 total_cost += to_l1_dist * rate
-
                 current_location = "L1"
                 visited.add(center)
                 break
             else:
-                break  # all centers visited
-
+                break
         return total_cost
-
-# API route
-
 
 @app.post("/calculate-cost")
 def calculate_cost(order: Order):
