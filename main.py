@@ -1,11 +1,24 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Dict, List, Tuple
 import math
 
 app = FastAPI()
 
+# Root route to avoid 404 error
+
+
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return """
+    <h2>🚚 FastAPI Delivery Cost Estimator is Running ✅</h2>
+    <p>Use <code>POST /calculate-cost</code> with product quantities in the request body to calculate delivery cost.</p>
+    """
+
 # Request schema
+
+
 class Order(BaseModel):
     A: int = 0
     B: int = 0
@@ -17,6 +30,7 @@ class Order(BaseModel):
     H: int = 0
     I: int = 0
 
+
 class DeliveryNetwork:
     def __init__(self):
         self.product_weight = {
@@ -26,7 +40,7 @@ class DeliveryNetwork:
             "D": 12,  # C2
             "E": 25,  # C2
             "F": 15,  # C2
-            "G": 0.5, # C3
+            "G": 0.5,  # C3
             "H": 1,   # C3
             "I": 2    # C3
         }
@@ -75,6 +89,7 @@ class DeliveryNetwork:
                     center_to_products[center].extend([product] * qty)
         return [(center, products) for center, products in center_to_products.items() if products]
 
+
 class DeliveryPlanner:
     def __init__(self, network: DeliveryNetwork):
         self.network = network
@@ -109,7 +124,8 @@ class DeliveryPlanner:
                     current_location = center
 
                 # Pickup and deliver
-                weight = sum(self.network.product_weight[product] for product in products)
+                weight = sum(
+                    self.network.product_weight[product] for product in products)
                 to_l1_dist = self.network.get_distance(current_location, "L1")
                 rate = self.network.delivery_cost_per_km(weight)
                 total_cost += to_l1_dist * rate
@@ -122,8 +138,9 @@ class DeliveryPlanner:
 
         return total_cost
 
-
 # API route
+
+
 @app.post("/calculate-cost")
 def calculate_cost(order: Order):
     order_dict = order.dict()
