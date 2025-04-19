@@ -12,7 +12,7 @@ app = FastAPI()
 @app.get("/", response_class=HTMLResponse)
 def root():
     return """
-    <h2>🚚 FastAPI Delivery Cost Estimator is Running ✅</h2>
+    <h2> FastAPI Delivery Cost Estimator is Running </h2>
     <p>Use <code>POST /calculate-cost</code> with product quantities in the request body to calculate delivery cost.</p>
     """
 
